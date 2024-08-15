@@ -18,12 +18,13 @@ const ProductList: FC<{ title: string; products: Product[] }> = ({
     >
       {products?.map((product) => (
         <ProductCard
-          key={product.id}
-          id={product.id}
+          key={product._id} // Ensure unique key here
+          _id={product._id}
+          name={product.name}
           category={product.category}
           title={product.title}
           price={product.price}
-          thumbnail={product.thumbnail}
+          image={product.image}
           rating={product.rating}
           discountPercentage={product.discountPercentage}
         />

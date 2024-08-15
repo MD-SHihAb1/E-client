@@ -1,7 +1,9 @@
+
 import { FC, useEffect, useRef, useState } from "react";
 import { useAppSelector, useAppDispatch } from "../redux/hooks";
 import { addProducts } from "../redux/features/productSlice";
 import ProductCard from "../components/ProductCard";
+
 import { Product } from "../models/Product";
 
 const AllProducts: FC = () => {
@@ -9,15 +11,23 @@ const AllProducts: FC = () => {
   const sortRef = useRef<HTMLSelectElement>(null);
   const [currentProducts, setCurrentProducts] = useState<Product[]>([]);
   const allProducts = useAppSelector(
-    (state) => state.productReducer.allProducts
+    (state) => state.productReducer.allProducts || []
   );
 
   useEffect(() => {
     const fetchProducts = () => {
-      fetch("https://dummyjson.com/products?limit=500")
+      fetch("http://localhost:5000/product")
         .then((res) => res.json())
-        .then(({ products }) => {
-          dispatch(addProducts(products));
+        .then((data) => {
+          console.log("API Response:", data);
+          if (Array.isArray(data)) {
+            dispatch(addProducts(data));
+          } else {
+            console.error("Unexpected response format:", data);
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to fetch products:", error);
         });
     };
 
@@ -50,7 +60,7 @@ const AllProducts: FC = () => {
         })
       );
     } else {
-      setCurrentProducts([...currentProducts].sort((a, b) => a.id - b.id));
+      setCurrentProducts([...currentProducts].sort((a, b) => a._id - b._id));
     }
   };
 
@@ -71,9 +81,13 @@ const AllProducts: FC = () => {
             </select>
           </div>
           <div className="grid gap-4 xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1">
-            {currentProducts.map((product) => (
-              <ProductCard key={product.id} {...product} />
-            ))}
+            {currentProducts.length > 0 ? (
+              currentProducts.map((product) => (
+                <ProductCard key={product._id} {...product} />
+              ))
+            ) : (
+              <p>No products available</p>
+            )}
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
+// SingleProduct.tsx
 import { FC, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useAppDispatch } from "../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { addToCart, setCartState } from "../redux/features/cartSlice";
 import { Product } from "../models/Product";
 import RatingStar from "../components/RatingStar";
@@ -13,85 +14,72 @@ import Reviews from "../components/Reviews";
 import useAuth from "../hooks/useAuth";
 import { MdFavoriteBorder } from "react-icons/md";
 import { addToWishlist } from "../redux/features/productSlice";
-
-const lorem =
-  "It is important to take care of the patient, to be followed by the patient, but it will happen at such a time that there is a lot of work and pain. For to come to the smallest detail, no one should practice any kind of work unless he derives some benefit from it. Do not be angry with the pain in the reprimand in the pleasure he wants to be a hair from the pain in the hope that there is no breeding. Unless they are blinded by lust, they do not come forth; they are in fault who abandon their duties and soften their hearts, that is, their labors.";
+import { CartItem } from "../models/CartItem";
 
 const SingleProduct: FC = () => {
   const dispatch = useAppDispatch();
-  const { productID } = useParams();
-  const [product, setProduct] = useState<Product>();
-  const [imgs, setImgs] = useState<string[]>();
-  const [selectedImg, setSelectedImg] = useState<string>();
-  const [sCategory, setScategory] = useState<string>();
+  const { _id } = useParams<{ _id: string }>();
+
+  const [product, setProduct] = useState<Product | null>(null);
+  const [imgs, setImgs] = useState<string[]>([]);
+  const [selectedImg, setSelectedImg] = useState<string>('');
+  const [sCategory, setScategory] = useState<string>('');
   const [similar, setSimilar] = useState<Product[]>([]);
   const { requireAuth } = useAuth();
 
   useEffect(() => {
-    const fetchProductDetails = () => {
-      fetch(`https://dummyjson.com/products/${productID}`)
+    if (_id) {
+      fetch(`http://localhost:5000/product/${_id}`)
         .then((res) => res.json())
         .then((data) => {
-          const { thumbnail, images, category } = data;
           setProduct(data);
-          setImgs(images);
-          setScategory(category);
-          setSelectedImg(thumbnail);
-        });
-    };
-    fetchProductDetails();
-  }, [productID]);
+          setImgs([data.image]);
+          setSelectedImg(data.image);
+          setScategory(data.category);
+        })
+        .catch((err) => console.error('Error fetching product:', err));
+    }
+  }, [_id]);
 
   useEffect(() => {
-    const fetchPreferences = (cat: string) => {
-      fetch(`https://dummyjson.com/products/category/${cat}`)
+    if (sCategory) {
+      fetch(`http://localhost:5000/product/category/${sCategory}`)
         .then((res) => res.json())
         .then((data) => {
           const _products: Product[] = data.products;
-          const filtered = _products.filter((product) => {
-            if (productID && product.id !== parseInt(productID)) return product;
-          });
+          const filtered = _products.filter((product) => product._id !== _id);
           setSimilar(filtered);
-        });
-    };
-    if (sCategory && sCategory !== "") fetchPreferences(sCategory);
-  }, [productID, sCategory]);
+        })
+        .catch((err) => console.error('Error fetching similar products:', err));
+    }
+  }, [sCategory, _id]);
 
   const addCart = () => {
     requireAuth(() => {
-      if (product)
-        dispatch(
-          addToCart({
-            id: product.id,
-            price: product.price,
-            title: product.title,
-            category: product.category,
-            rating: product.rating,
-            thumbnail: product.thumbnail,
-            discountPercentage: product.discountPercentage,
-          })
-        );
-      toast.success("item added to cart successfully", {
-        duration: 3000,
-      });
+      if (product) {
+        dispatch(addToCart({
+          _id: product._id,
+          price: product.price,
+          title: product.name,
+          category: product.category,
+          rating: product.rating,
+          thumbnail: product.image,
+          discountPercentage: 0,
+          quantity: 1,
+        }));
+        toast.success("Item added to cart successfully", {
+          duration: 3000,
+        });
+      }
     });
   };
 
   const buyNow = () => {
     requireAuth(() => {
-      if (product)
-        dispatch(
-          addToCart({
-            id: product.id,
-            price: product.price,
-            title: product.title,
-            category: product.category,
-            rating: product.rating,
-            thumbnail: product.thumbnail,
-            discountPercentage: product.discountPercentage,
-          })
-        );
-      dispatch(setCartState(true));
+      if (product) {
+        addCart();
+        dispatch(setCartState(true));
+      }
     });
   };
 
@@ -99,7 +87,7 @@ const SingleProduct: FC = () => {
     requireAuth(() => {
       if (product) {
         dispatch(addToWishlist(product));
-        toast.success("item added to your wishlist", {
+        toast.success("Item added to your wishlist", {
           duration: 3000,
         });
       }
@@ -112,28 +100,27 @@ const SingleProduct: FC = () => {
         <div className="space-y-2">
           <img src={selectedImg} alt="selected" className="h-80" />
           <div className="flex space-x-1 items-center">
-            {imgs &&
-              imgs.map((_img) => (
-                <img
-                  src={_img}
-                  key={_img}
-                  alt="thumb"
-                  className={`w-12 cursor-pointer hover:border-2 hover:border-black ${
-                    _img === selectedImg ? "border-2 border-black" : ""
-                  }`}
-                  onClick={() => setSelectedImg(_img)}
-                />
-              ))}
+            {imgs.map((_img) => (
+              <img
+                src={_img}
+                key={_img}
+                alt="thumb"
+                className={`w-12 cursor-pointer hover:border-2 hover:border-black ${
+                  _img === selectedImg ? "border-2 border-black" : ""
+                }`}
+                onClick={() => setSelectedImg(_img)}
+              />
+            ))}
           </div>
         </div>
         <div className="px-2">
-          <h2 className="text-2xl">{product?.title}</h2>
-          {product?.rating && <RatingStar rating={product?.rating} />}
+          <h2 className="text-2xl">{product?.name}</h2>
+          {product?.rating && <RatingStar rating={product.rating} />}
           <div className="mt-1">
-            {product?.discountPercentage && (
+            {product?.price && (
               <PriceSection
-                discountPercentage={product?.discountPercentage}
-                price={product?.price}
+                discountPercentage={0} // Assuming no discount
+                price={product.price}
               />
             )}
           </div>
@@ -156,7 +143,7 @@ const SingleProduct: FC = () => {
           <div className="mt-2">
             <h2 className="font-bold">About the product</h2>
             <p className="leading-5">
-              {product?.description} {lorem}
+              {product?.description}
             </p>
           </div>
           <div className="flex flex-wrap items-center mt-4 mb-2 space-x-2">
@@ -186,7 +173,7 @@ const SingleProduct: FC = () => {
             </button>
           </div>
         </div>
-        {product && <Reviews id={product?.id} />}
+        {product && <Reviews id={product._id} />}
       </div>
       <hr className="mt-4" />
       <ProductList title="Similar Products" products={similar} />

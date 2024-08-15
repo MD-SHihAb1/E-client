@@ -1,11 +1,20 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { AuthSlice } from "../../models/AuthSlice";
+import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../Firebase/firebase.config"; // Adjust this import to your Firebase configuration file
+
+// Define the state structure for the auth slice
+interface AuthSlice {
+  isLoggedIn: boolean;
+  modalOpen: boolean;
+  username: string;
+}
 
 interface LoginProps {
   username: string;
   password: string;
 }
 
+// Initialize the state based on local storage data
 const initialState: AuthSlice = {
   isLoggedIn:
     localStorage.getItem("username") !== null &&
@@ -15,35 +24,56 @@ const initialState: AuthSlice = {
   username: localStorage.getItem("username") ?? "",
 };
 
+// Asynchronous thunk action for handling login
+export const doLogin = createAsyncThunk(
+  "auth/doLogin",
+  async (loginProps: LoginProps, { rejectWithValue }) => {
+    const { username, password } = loginProps;
+
+    // Check if the email (username) is provided
+    if (!username || username.trim() === "") {
+      return rejectWithValue("Email is required.");
+    }
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, username, password);
+      const user = userCredential.user;
+      localStorage.setItem("username", user.email || ""); // Store the user's email in localStorage
+      return { username: user.email || "" };
+    } catch (error: any) {
+      console.error("Login failed", error); // Log the entire error
+      return rejectWithValue(error.message); // Return the error message for handling
+    }
+  }
+);
+
+// Create the auth slice
 export const authSlice = createSlice({
   name: "authSlice",
   initialState,
   reducers: {
     updateModal: (state, action: PayloadAction<boolean>) => {
-      return { ...state, modalOpen: action.payload };
-    },
-    doLogin: (state, action: PayloadAction<LoginProps>) => {
-      if (
-        action.payload.username === "atuny0" &&
-        action.payload.password === "9uQFF1Lh"
-      ) {
-        localStorage.setItem("username", "atuny0");
-        return {
-          ...state,
-          username: "atuny0",
-          modalOpen: false,
-          isLoggedIn: true,
-        };
-      } else {
-        return state;
-      }
+      state.modalOpen = action.payload;
     },
     doLogout: (state) => {
       localStorage.removeItem("username");
-      return { ...state, username: "", isLoggedIn: false };
+      state.username = "";
+      state.isLoggedIn = false;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(doLogin.fulfilled, (state, action) => {
+      state.username = action.payload.username;
+      state.isLoggedIn = true;
+      state.modalOpen = false;
+    });
+    builder.addCase(doLogin.rejected, (state, action) => {
+      console.error("Authentication error:", action.payload); // Log the error to the console
+      alert(`Authentication failed: ${action.payload}`); // Optionally show an alert to the user
+    });
   },
 });
 
-export const { updateModal, doLogin, doLogout } = authSlice.actions;
+// Export the actions and the reducer
+export const { updateModal, doLogout } = authSlice.actions;
 export default authSlice.reducer;

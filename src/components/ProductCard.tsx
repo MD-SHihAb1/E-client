@@ -1,5 +1,4 @@
 import { FC } from "react";
-import { Product } from "../models/Product";
 import RatingStar from "./RatingStar";
 import { addToCart } from "../redux/features/cartSlice";
 import { useAppDispatch } from "../redux/hooks";
@@ -9,13 +8,25 @@ import { Link } from "react-router-dom";
 import PriceSection from "./PriceSection";
 import useAuth from "../hooks/useAuth";
 
-const ProductCard: FC<Product> = ({
-  id,
+interface ProductCardProps {
+  _id: string;
+  price: number;
+  image: string;
+  title: string;
+  category: string;
+  rating?: number;
+  name: string;
+  discountPercentage?: number;
+}
+
+const ProductCard: FC<ProductCardProps> = ({
+  _id,
   price,
-  thumbnail,
+  name,
+  image,
   title,
   category,
-  rating,
+  rating = 0,
   discountPercentage,
 }) => {
   const dispatch = useAppDispatch();
@@ -25,16 +36,17 @@ const ProductCard: FC<Product> = ({
     requireAuth(() => {
       dispatch(
         addToCart({
-          id,
+          _id,
           price,
+          name,
           title,
           category,
           rating,
-          thumbnail,
+          image,
           discountPercentage,
         })
       );
-      toast.success("item added to cart successfully", {
+      toast.success("Item added to cart successfully", {
         duration: 3000,
       });
     });
@@ -43,9 +55,9 @@ const ProductCard: FC<Product> = ({
   return (
     <div className="border border-gray-200 font-lato" data-test="product-card">
       <div className="text-center border-b border-gray-200">
-        <Link to={{ pathname: `/product/${id}` }}>
+        <Link to={{ pathname: `/product/${_id}` }}>
           <img
-            src={thumbnail}
+            src={image}
             alt={title}
             className="inline-block h-60 transition-transform duration-200 hover:scale-110"
           />
@@ -53,11 +65,11 @@ const ProductCard: FC<Product> = ({
       </div>
       <div className="px-8 pt-4">
         <p className="text-gray-500 text-[14px] font-medium dark:text-white">
-          {category}
+          {name}
         </p>
         <Link
           className="font-semibold hover:underline dark:text-white"
-          to={{ pathname: `/product/${id}` }}
+          to={{ pathname: `/product/${_id}` }}
         >
           {title}
         </Link>

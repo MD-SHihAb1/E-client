@@ -2,7 +2,11 @@
 import { FC } from "react";
 import { AiFillStar, AiOutlineStar } from "react-icons/ai";
 
-const RatingStar: FC<{ rating: number }> = ({ rating }) => {
+interface RatingStarProps {
+  rating: number; // Rating is required and should be a number
+}
+
+const RatingStar: FC<RatingStarProps> = ({ rating }) => {
   const ratingNum = parseFloat(rating.toString());
   const main = Math.floor(ratingNum);
   const other = 5 - main;

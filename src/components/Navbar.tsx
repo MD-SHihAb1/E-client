@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useContext } from "react";
 import { AiOutlineShoppingCart } from "react-icons/ai";
 import { BsSearch } from "react-icons/bs";
 import { useAppSelector, useAppDispatch } from "../redux/hooks";
@@ -10,12 +10,17 @@ import { FaUser } from "react-icons/fa";
 import CustomPopup from "./CustomPopup";
 import { updateDarkMode } from "../redux/features/homeSlice";
 import { MdOutlineDarkMode, MdOutlineLightMode } from "react-icons/md";
+// import { AuthContext } from "./Providers/AuthProvider";
 
 const Navbar: FC = () => {
   const dispatch = useAppDispatch();
   const cartCount = useAppSelector(
     (state) => state.cartReducer.cartItems.length
   );
+
+
+  // const { user, logOut } = useContext(AuthContext);
+
   const username = useAppSelector((state) => state.authReducer.username);
   const isDarkMode = useAppSelector((state) => state.homeReducer.isDarkMode);
   const { requireAuth } = useAuth();

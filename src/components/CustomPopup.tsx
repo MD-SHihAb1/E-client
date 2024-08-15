@@ -1,6 +1,7 @@
 import { FC, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
+  MdAssignment,
   MdFavoriteBorder,
   MdOutlineAccountCircle,
   MdOutlineLogout,
@@ -62,6 +63,19 @@ const CustomPopup: FC = () => {
                 >
                   <Link to="/wishlist" onClick={hidePopup}>
                     Wishlist
+                  </Link>
+                </td>
+              </tr>
+              <tr>
+                <td className="text-center">
+                <MdAssignment />
+                </td>
+                <td
+                  className="hover:underline cursor-pointer text-lg pl-2"
+                  data-test="wishlist-container"
+                >
+                  <Link to="/d" onClick={hidePopup}>
+                    Dashboard
                   </Link>
                 </td>
               </tr>

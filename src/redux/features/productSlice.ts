@@ -21,13 +21,18 @@ export const productSlice = createSlice({
     updateFeaturedList: (state, action: PayloadAction<Product[]>) => {
       return { ...state, featuredProducts: action.payload };
     },
+
     addToWishlist: (state, action: PayloadAction<Product>) => {
+      console.log('Dispatching addToWishlist with:', action.payload);
       const { wishlist } = state;
-      if (wishlist.findIndex((item) => item.id === action.payload.id) === -1) {
+      if (wishlist.findIndex((item) => item._id === action.payload._id) === -1) {
         const updatedList = [...state.wishlist, action.payload];
         return { ...state, wishlist: updatedList };
       }
     },
+    
+
+
     addCategories: (state, action: PayloadAction<Category[]>) => {
       return { ...state, categories: action.payload };
     },

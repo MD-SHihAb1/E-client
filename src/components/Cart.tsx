@@ -14,10 +14,10 @@ const Cart: FC = () => {
   const calculateTotal = () => {
     let total = 0;
     items.forEach((item) => {
-      if (item.quantity && item.discountPercentage)
-        total +=
-          (item.price - (item.price * item.discountPercentage) / 100) *
-          item.quantity;
+      const price = item.price || 0;
+      const quantity = item.quantity || 0;
+      const discount = item.discountPercentage || 0;
+      total += (price - (price * discount) / 100) * quantity;
     });
     return total.toFixed(2);
   };
@@ -26,7 +26,7 @@ const Cart: FC = () => {
     dispatch(setCartState(false));
     dispatch(emptyCart());
     setCheckout(false);
-    toast.success("your order has been confirmed", { duration: 3000 });
+    toast.success("Your order has been confirmed", { duration: 3000 });
   };
 
   if (isOpen) {
@@ -42,7 +42,7 @@ const Cart: FC = () => {
               Clicking confirm button will consider your order confirmed,
               payment done & also order delivered successfully. Another thing to
               mention, order history hasn't been developed due to not having a
-              proper backend api.
+              proper backend API.
             </p>
             <div className="flex items-center space-x-2">
               <span
@@ -74,8 +74,8 @@ const Cart: FC = () => {
               />
             </div>
             <div className="mt-6 space-y-2">
-              {items?.length > 0 ? (
-                items.map((item) => <CartRow key={item.id} {...item} />)
+              {items.length > 0 ? (
+                items.map((item) => <CartRow key={item._id} {...item} />)
               ) : (
                 <div className="flex flex-col justify-center items-center p-4">
                   <img src="/emptyCart.jpg" alt="empty" className="w-40" />
@@ -83,7 +83,7 @@ const Cart: FC = () => {
                 </div>
               )}
             </div>
-            {items?.length > 0 && (
+            {items.length > 0 && (
               <>
                 <div className="flex items-center justify-between p-2">
                   <h2 className="font-bold text-2xl">Total</h2>
@@ -104,6 +104,8 @@ const Cart: FC = () => {
       </div>
     );
   }
+
+  return null;
 };
 
 export default Cart;
